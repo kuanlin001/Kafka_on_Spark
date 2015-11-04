@@ -3,12 +3,14 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 
 import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.broadcast.Broadcast
 
 import java.util.Properties
+import java.io.File
+import scala.io.Source
 
 object Data_Producer {
   def main(args: Array[String]) {
@@ -18,15 +20,27 @@ object Data_Producer {
     .setMaster("local[4]")    // comment out when submitting to spark cluster
     val sc = new SparkContext(sparkConf)
     
-    sc.parallelize(Array(1,2,3,4)).foreach(x => {
-      val producer = newStringKafkaProducer
-      sendMsg(producer=producer, topic="test", value="[server " + x + "] msg1")
-      sendMsg(producer=producer, topic="test", value="[server " + x + "] msg2")
-      sendMsg(producer=producer, topic="test", value="[server " + x + "] msg3")
-      producer.close()
-    })
+    val local_data_sources = Array(
+        "C:\\Users\\kuanlin\\workspace\\W205_Final_Project\\W205_Final_Project_Exe\\W205_Final_Data_Source\\Product1\\",
+        "C:\\Users\\kuanlin\\workspace\\W205_Final_Project\\W205_Final_Project_Exe\\W205_Final_Data_Source\\Product2\\",
+        "C:\\Users\\kuanlin\\workspace\\W205_Final_Project\\W205_Final_Project_Exe\\W205_Final_Data_Source\\Product3\\",
+        "C:\\Users\\kuanlin\\workspace\\W205_Final_Project\\W205_Final_Project_Exe\\W205_Final_Data_Source\\Product4\\"
+    )
     
-    //sendMsg(topic="test-topic", value="some very important message")
+    sc.parallelize(local_data_sources).foreach(ds => {
+      val producer = newStringKafkaProducer     
+      
+      println("Start streaming data source: " + ds.split("\\\\").last)
+      (new File(ds)).listFiles.filter(f => { f.isFile && f.getName.toLowerCase.endsWith(".txt") }).foreach( f => {
+        val src = Source.fromFile(f)
+        src.getLines.foreach(line => { 
+            println("Sending message: " + line)
+            sendMsg(producer=producer, topic=ds.split("\\\\").last, value=line)
+          })
+      })
+      
+      //producer.close()
+    })
     
     println("Data-generation simulation ends")
   }
@@ -53,4 +67,3 @@ object Data_Producer {
     return producer
   }
 }
-
