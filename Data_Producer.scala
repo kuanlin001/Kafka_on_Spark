@@ -39,7 +39,7 @@ object Data_Producer {
           })
       })
       
-      //producer.close()
+      producer.close()
     })
     
     println("Data-generation simulation ends")
