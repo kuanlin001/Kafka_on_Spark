@@ -32,10 +32,10 @@ object Data_Producer {
       
       println("Start streaming data source: " + ds.split("\\\\").last)
       (new File(ds)).listFiles.filter(f => { f.isFile && f.getName.toLowerCase.endsWith(".txt") }).foreach( f => {
-        val src = Source.fromFile(f)
-        src.getLines.foreach(line => { 
+        Source.fromFile(f, "ISO-8859-1").getLines.foreach(line => {
             println("Sending message: " + line)
             sendMsg(producer=producer, topic=ds.split("\\\\").last, value=line)
+            Thread.sleep(1000)
           })
       })
       
@@ -67,3 +67,4 @@ object Data_Producer {
     return producer
   }
 }
+
