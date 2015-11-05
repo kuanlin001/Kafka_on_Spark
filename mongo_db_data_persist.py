@@ -37,7 +37,7 @@ def persistToDb(client, db_name, measure_data):
 	
 # open connection and persist to database
 connection = MongoClient('localhost', 27017)
- data is append-only and immutable
+# data is append-only and immutable
 for line in generateData():
 	measure_data = dataCleansing(line)
 	if measure_data != None:
